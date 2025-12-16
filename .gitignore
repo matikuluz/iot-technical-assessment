@@ -1,0 +1,24 @@
+# --- Python / Backend ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.log
+.env
+
+# --- Databases ---
+*.db
+*.sqlite3
+*.sqlite
+
+# --- VS Code ---
+.vscode/
+*.code-workspace
+
+# --- OS Generated ---
+.DS_Store
+Thumbs.db
+
+samples/
