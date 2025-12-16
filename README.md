@@ -1,5 +1,5 @@
 
-# IoT Full Stack Assessment
+# IoT Full Stack Technical Assessment
 
 ## Overview
 
@@ -115,7 +115,7 @@ Now that the infrastructure is running, your goal is to connect the pieces.
 
 ### Task 1: The Middleware
 
-**Location:**  `middleware/bridge.py`  (Skeleton provided)
+**Location:**  `bridge/middleware.py`  (Skeleton provided)
 
 You need to write the script that bridges the gap between MQTT and our HTTP API.
 
@@ -151,17 +151,19 @@ You need to bring the dashboard to life by connecting it to the backend.
 
 ----------
 
+
+
 ## Submission
 
-1.  Ensure all your code is saved.
+1.  **Fork**  this repository to your own GitHub account.
     
-2.  Stop all running servers.
+2.  **Commit**  your changes as you work.
     
-3.  **Zip**  the entire project folder.
+3.  Once finished, ensure all tests pass and your code is clean.
     
-    -   **IMPORTANT:**  Please  **exclude**  the  `node_modules`  and  `.venv`  folders to keep the file size small.
-        
-4.  Email the zip file to us.
+4.  Send us the  **link to your forked repository**.
+    
+    -   _Note: Please ensure the repository is public so we can review it, or invite us if it is private._
     
 
 ----------
