@@ -1,4 +1,5 @@
 import json
+import math
 import requests
 import paho.mqtt.client as mqtt
 
@@ -20,6 +21,10 @@ def try_parse_float(value):
         value = float(value) 
     except (TypeError, ValueError): 
         # If failed, early exit 
+        return None 
+    
+    # Reject NaN and +/-inf 
+    if not math.isfinite(value):
         return None 
     
     return value
