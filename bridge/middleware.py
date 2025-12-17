@@ -1,5 +1,6 @@
 import json
 import math
+import logging
 import requests
 import paho.mqtt.client as mqtt
 
@@ -8,9 +9,16 @@ MQTT_BROKER = "test.mosquitto.org"
 MQTT_TOPIC = "loopservices/{mathias}/sensors/raw"
 API_URL = "http://127.0.0.1:8000/api/readings"
 
+# 
+# --- Logging --- 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s"
+)
+logger = logging.getLogger("IoT-Middleware")
+
 # --- TODO: Implement your logic below ---
 
-## TODO: Test function for edge-case vulnerabilities 
 def try_parse_float(value):
 
     # Early escape if variable type is nothing
@@ -29,7 +37,6 @@ def try_parse_float(value):
     
     return value
 
-# TODO: Add logging 
 # Validates and normalizes a raw MQTT JSON payload.
 # If valid, POSTs the reading to the backend API.
 def sanitize_and_send(payload):
@@ -45,6 +52,7 @@ def sanitize_and_send(payload):
     try: 
         raw_data = json.loads(payload)
     except json.JSONDecodeError:
+        logger.info("REJECT: invalid JSON payload") 
         return None 
     
     # 2: Transforming the variables `t` and `h` into ReadingSchema format
@@ -57,12 +65,15 @@ def sanitize_and_send(payload):
     humidity_value = try_parse_float(humidity_value)
     
     if temperature_value is None or humidity_value is None: 
+        logger.info("REJECT: non-numeric values (t=%r, h=%r)", raw_data.get("t"), raw_data.get("h"))
         return None 
 
     # 3.2: Validate ranges 
     if not (-50.0 <= temperature_value <= 100.0): 
+        logger.info("REJECT: temperature out of range (t=%s)", temperature_value)
         return None 
-    if not (0.0 <= humidity_value <= 100.0): 
+    if not (0.0 <= humidity_value <= 100.0):
+        logger.info("REJECT: humidity out of range (h=%s)", humidity_value)
         return None 
     
     normalized = {
@@ -75,13 +86,14 @@ def sanitize_and_send(payload):
     try:
         backend_response = requests.post(API_URL, json=normalized, timeout=5)
     except requests.RequestException as e:
+        logger.warning("REJECT: post failed (%s)", e)
         return None
 
     if 200 <= backend_response.status_code < 300:
-        print(f"backend accepted")
+        logger.info("ACCEPT: backend accepted (%s) %s", backend_response.status_code, normalized)
         return True
     else:
-        print(f"backend rejected")
+        logger.warning("DROP: backend rejected (%s): %s", backend_response.status_code)
         return None    
 
 # --- MQTT Setup ---
