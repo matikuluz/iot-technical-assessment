@@ -21,6 +21,11 @@ logger = logging.getLogger("IoT-Middleware")
 
 def sanitize_payload(payload: str) -> dict | None: 
 
+    """
+    Parse and normalize an MQTT JSON payload.
+    Returns {"temperature": float, "humidity": float} or None if invalid. 
+    """
+
     # 1.1: Parse the JSON payload 
     # Formatting the `str` input into a JSON format 
     try: 
@@ -53,6 +58,11 @@ def sanitize_payload(payload: str) -> dict | None:
     return {"temperature": temperature_value, "humidity": humidity_value} 
 
 def post_reading(reading: dict) -> bool: 
+
+    """
+    POST a normalized reading to the backend. 
+    Returns True on 200, otherwise False. 
+    """
     
     # 1.4: Post to Backend 
     # https://requests.readthedocs.io/en/latest/user/quickstart/ 
@@ -71,6 +81,11 @@ def post_reading(reading: dict) -> bool:
 
 def try_parse_float(value) -> float | None: 
 
+    """
+    Attempt to parse a value as a float. 
+    Returns float if successful, None otherwise. 
+    """
+
     # Early escape if variable type is nothing
     if value is None: return None 
     
@@ -87,9 +102,13 @@ def try_parse_float(value) -> float | None:
     
     return value
 
-# Validates and normalizes a raw MQTT JSON payload.
-# If valid, POSTs the reading to the backend API.
 def sanitize_and_send(payload) -> bool | None:
+
+    """
+    Validates and normalizes a raw MQTT JSON payload.
+    If valid, POSTs the reading to the backend API.
+    """
+
     """
     Task 1: The Middleware
     1.1: Parse the JSON payload.
