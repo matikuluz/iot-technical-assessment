@@ -89,7 +89,7 @@ const chartOptions = {
   scales: {
     x: {
       grid: { display: false },
-      ticks: { color: '#8898aa', maxTicksLimit: 8 }
+      ticks: { color: '#8898aa',  maxTicksLimit: 8 }
     },
     y: {
       border: { display: false },
@@ -130,35 +130,37 @@ const updateChart = (temp, hum, timestamp) => {
 const fetchHistory = async () => {
     // Task 2.1
 
-    // Found relevant and helpful docs for this function here: 
+    // Helpful docs: 
     // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch?
 
-    // Fetch the last 50 readings from GET http://127.0.0.1:8000/api/readings
+    // 2.1.1: Fetch the last 50 readings from GET http://127.0.0.1:8000/api/readings
     const limit = 50
     const url = `${API_BASE_URL}/api/readings?limit=${encodeURIComponent(limit)}`
 
     try {
       const response = await fetch(url)
-
-      if (!response.ok) {
-        throw new Error(`Response status: ${response.status}`)
-      }
+      if (!response.ok) throw new Error(`Response status: ${response.status}`)
 
       const result = await response.json()
+      if (!Array.isArray(result)) throw new Error("Unexpected response format (expected an array)")
 
-      // Early exit if result from backend is not of type array. 
-      if (!Array.isArray(result)) {
-        throw new Error("Unexpected response format (expected an array)")
+      // 2.1.2: Reset chart before loading history
+      chartData.value = {
+        labels: [],
+        datasets: [
+          { ...chartData.value.datasets[0], data: [] },
+          { ...chartData.value.datasets[1], data: [] }
+        ]
       }
 
-      // Printing for testing purposes 
-      console.log(result)
+      // Pass temp and hum values to `updateChart` 
+      result.slice(-limit).forEach((r) => {
+        updateChart(r.temperature, r.humidity, r.timestamp)
+      })
 
     } catch (error) {
       console.error(error.message)
     }
-
-    // Populate the chart with this historical data.
 }
 
 const connectWebSocket = () => {
@@ -170,6 +172,7 @@ const connectWebSocket = () => {
 
 onMounted(() => {
     fetchHistory() 
+    connectWebSocket()
 })
 
 onUnmounted(() => {
