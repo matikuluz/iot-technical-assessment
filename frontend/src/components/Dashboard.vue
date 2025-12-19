@@ -31,6 +31,7 @@ ChartJS.register(
 // so it can be configured per deployment without changing code.
 // However I didn't do this for the assessment, because the URL is provided through the README. 
 const API_BASE_URL = "http://127.0.0.1:8000" 
+const WS_URL = "ws://127.0.0.1:8000/ws"
 const currentTemp = ref(0)
 const currentHum = ref(0)
 const isConnected = ref(false)
@@ -143,8 +144,9 @@ const fetchHistory = async () => {
 
       const result = await response.json()
       if (!Array.isArray(result)) throw new Error("Unexpected response format (expected an array)")
-
-      // 2.1.2: Reset chart before loading history
+      
+      // 2.1.2: Populate the chart with this historical data. 
+      // Reset chart before loading history
       chartData.value = {
         labels: [],
         datasets: [
@@ -164,10 +166,41 @@ const fetchHistory = async () => {
 }
 
 const connectWebSocket = () => {
-    // TODO: Task 2.2 & 2.3
-    // Connect to ws://127.0.0.1:8000/ws
-    // Handle 'onopen', 'onmessage', and 'onclose'.
-    // Update 'isConnected' state and push new readings to the chart.
+  // Task 2.2 & 2.3
+  // Connect to ws://127.0.0.1:8000/ws and stream live updates into the chart.
+
+  // Close any existing socket before creating a new one
+  if (socket) socket.close()
+
+  // Connect to the WebSocket 
+  // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket
+  socket = new WebSocket(WS_URL)
+  socket.onopen = () => { isConnected.value = true }
+
+  // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/message_event
+  socket.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data)
+
+      const temp = Number(data.temperature)
+      const hum = Number(data.humidity)
+      const timestamp = data.timestamp
+
+      // Push the new reading into the chart + update current cards
+      updateChart(temp, hum, timestamp)
+    } catch {
+      // Ignore broken messages 
+    }
+  }
+
+  socket.onclose = () => {
+    isConnected.value = false
+    socket = null
+  }
+
+  socket.onerror = () => {
+    isConnected.value = false
+  }
 }
 
 onMounted(() => {
