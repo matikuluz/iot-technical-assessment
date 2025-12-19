@@ -17,36 +17,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger("IoT-Middleware")
 
-# --- TODO: Implement your logic below ---
+# --- TODO: Implement your logic below --- 
 
-def try_parse_float(value):
-
-    # Early escape if variable type is nothing
-    if value is None: return None 
-    
-    # Try and parse into a float value
-    try: 
-        value = float(value) 
-    except (TypeError, ValueError): 
-        # If failed, early exit 
-        return None 
-    
-    # Reject NaN and +/-inf 
-    if not math.isfinite(value):
-        return None 
-    
-    return value
-
-# Validates and normalizes a raw MQTT JSON payload.
-# If valid, POSTs the reading to the backend API.
-def sanitize_and_send(payload):
-    """
-    Task 1: The Middleware
-    1.1: Parse the JSON payload.
-    1.2: Normalize keys ('t' -> 'temperature', 'h' -> 'humidity').
-    1.3: Validate data (filter out impossible values).
-    1.4: Send valid data to API_URL via POST request.
-    """
+def sanitize_payload(payload: str) -> dict | None: 
 
     # 1.1: Parse the JSON payload 
     # Formatting the `str` input into a JSON format 
@@ -76,26 +49,62 @@ def sanitize_and_send(payload):
     if not (0.0 <= humidity_value <= 100.0):
         logger.info("REJECT: humidity out of range (h=%s)", humidity_value)
         return None 
-    
-    normalized = {
-        "temperature": temperature_value,
-        "humidity": humidity_value
-    }
 
+    return {"temperature": temperature_value, "humidity": humidity_value} 
+
+def post_reading(reading: dict) -> bool: 
+    
     # 1.4: Post to Backend 
     # https://requests.readthedocs.io/en/latest/user/quickstart/ 
     try:
-        backend_response = requests.post(API_URL, json=normalized, timeout=5)
+        backend_response = requests.post(API_URL, json=reading, timeout=5)
     except requests.RequestException as e:
         logger.warning("REJECT: post failed (%s)", e)
         return None
 
     if 200 <= backend_response.status_code < 300:
-        logger.info("ACCEPT: backend accepted (%s) %s", backend_response.status_code, normalized)
+        logger.info("ACCEPT: backend accepted (%s) %s", backend_response.status_code, reading)
         return True
     else:
         logger.warning("DROP: backend rejected (%s): %s", backend_response.status_code)
-        return None    
+        return False    
+
+def try_parse_float(value) -> float | None: 
+
+    # Early escape if variable type is nothing
+    if value is None: return None 
+    
+    # Try and parse into a float value
+    try: 
+        value = float(value) 
+    except (TypeError, ValueError): 
+        # If failed, early exit 
+        return None 
+    
+    # Reject NaN and +/-inf 
+    if not math.isfinite(value):
+        return None 
+    
+    return value
+
+# Validates and normalizes a raw MQTT JSON payload.
+# If valid, POSTs the reading to the backend API.
+def sanitize_and_send(payload) -> bool | None:
+    """
+    Task 1: The Middleware
+    1.1: Parse the JSON payload.
+    1.2: Normalize keys ('t' -> 'temperature', 'h' -> 'humidity').
+    1.3: Validate data (filter out impossible values).
+    1.4: Send valid data to API_URL via POST request.
+    """
+
+    normalized = sanitize_payload(payload) 
+    if normalized is None: 
+        return None 
+
+    if post_reading(normalized): return True 
+    else: return None 
+    
 
 # --- MQTT Setup ---
 
