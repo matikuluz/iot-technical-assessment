@@ -41,13 +41,14 @@ def try_parse_float(value):
 # If valid, POSTs the reading to the backend API.
 def sanitize_and_send(payload):
     """
-    1. Parse the JSON payload.
-    2. Normalize keys ('t' -> 'temperature', 'h' -> 'humidity').
-    3. Validate data (filter out impossible values).
-    4. Send valid data to API_URL via POST request.
+    Task 1: The Middleware
+    1.1: Parse the JSON payload.
+    1.2: Normalize keys ('t' -> 'temperature', 'h' -> 'humidity').
+    1.3: Validate data (filter out impossible values).
+    1.4: Send valid data to API_URL via POST request.
     """
 
-    # 1: Parse the JSON payload 
+    # 1.1: Parse the JSON payload 
     # Formatting the `str` input into a JSON format 
     try: 
         raw_data = json.loads(payload)
@@ -55,12 +56,12 @@ def sanitize_and_send(payload):
         logger.info("REJECT: invalid JSON payload") 
         return None 
     
-    # 2: Transforming the variables `t` and `h` into ReadingSchema format
+    # 1.2: Transforming the variables `t` and `h` into ReadingSchema format
     # ReadingSchema is defined in backend/main.py lines 32 - 34 
     temperature_value = raw_data.get("t")
     humidity_value = raw_data.get("h")
 
-    # 3.1: Calling `try_parse_float(value)` 
+    # 1.3.1: Calling `try_parse_float(value)` 
     temperature_value = try_parse_float(temperature_value)
     humidity_value = try_parse_float(humidity_value)
     
@@ -68,7 +69,7 @@ def sanitize_and_send(payload):
         logger.info("REJECT: non-numeric values (t=%r, h=%r)", raw_data.get("t"), raw_data.get("h"))
         return None 
 
-    # 3.2: Validate ranges 
+    # 1.3.2: Validate ranges 
     if not (-50.0 <= temperature_value <= 100.0): 
         logger.info("REJECT: temperature out of range (t=%s)", temperature_value)
         return None 
@@ -81,7 +82,7 @@ def sanitize_and_send(payload):
         "humidity": humidity_value
     }
 
-    # 4: Post to Backend 
+    # 1.4: Post to Backend 
     # https://requests.readthedocs.io/en/latest/user/quickstart/ 
     try:
         backend_response = requests.post(API_URL, json=normalized, timeout=5)
