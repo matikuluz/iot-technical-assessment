@@ -26,6 +26,11 @@ ChartJS.register(
 )
 
 // --- State ---
+
+// In a production environment, I would make `API_BASE_URL` an environment variable (e.g. `import.meta.env.VITE_API_BASE_URL`)
+// so it can be configured per deployment without changing code.
+// However I didn't do this for the assessment, because the URL is provided through the README. 
+const API_BASE_URL = "http://127.0.0.1:8000" 
 const currentTemp = ref(0)
 const currentHum = ref(0)
 const isConnected = ref(false)
@@ -123,8 +128,36 @@ const updateChart = (temp, hum, timestamp) => {
 // --- YOUR TASKS START HERE ---
 
 const fetchHistory = async () => {
-    // TODO: Task 2.1
+    // Task 2.1
+
+    // Found relevant and helpful docs for this function here: 
+    // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch?
+
     // Fetch the last 50 readings from GET http://127.0.0.1:8000/api/readings
+    const limit = 50
+    const url = `${API_BASE_URL}/api/readings?limit=${encodeURIComponent(limit)}`
+
+    try {
+      const response = await fetch(url)
+
+      if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`)
+      }
+
+      const result = await response.json()
+
+      // Early exit if result from backend is not of type array. 
+      if (!Array.isArray(result)) {
+        throw new Error("Unexpected response format (expected an array)")
+      }
+
+      // Printing for testing purposes 
+      console.log(result)
+
+    } catch (error) {
+      console.error(error.message)
+    }
+
     // Populate the chart with this historical data.
 }
 
@@ -136,7 +169,7 @@ const connectWebSocket = () => {
 }
 
 onMounted(() => {
-    // Initialize data and connections here
+    fetchHistory() 
 })
 
 onUnmounted(() => {
