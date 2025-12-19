@@ -4,7 +4,7 @@ import random
 import paho.mqtt.client as mqtt
 
 BROKER = "test.mosquitto.org" # Public test broker
-TOPIC = "loopservices/{mathias}/sensors/raw"
+TOPIC = "loopservices/mathias/sensors/raw"
 
 client = mqtt.Client()
 client.connect(BROKER, 1883, 60)

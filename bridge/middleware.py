@@ -6,7 +6,7 @@ import paho.mqtt.client as mqtt
 
 # --- Configuration ---
 MQTT_BROKER = "test.mosquitto.org"
-MQTT_TOPIC = "loopservices/{mathias}/sensors/raw"
+MQTT_TOPIC = "loopservices/mathias/sensors/raw"
 API_URL = "http://127.0.0.1:8000/api/readings"
 
 # 
